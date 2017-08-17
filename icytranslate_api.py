@@ -78,6 +78,8 @@ layer_number = 2
 max_grad = 1.0
 dropout = 0.2
 
+en2ind = dict(filter(lambda x:x[1] < src_vocab_size,en2ind.items()))
+
 tf.reset_default_graph()
 config = tf.ConfigProto(log_device_placement=True,allow_soft_placement = True)
 config.gpu_options.allow_growth = True
@@ -249,6 +251,16 @@ def api_singlesentence_translate():
         import traceback 
         traceback.print_exc()  
         return jsonify(errcode='error',error=str(e))
+
+def split_sents(segment):
+    res = []
+    index = 0
+    sents = [i for i in split_outnumb(segment) if i.strip()]
+    sents = [len(i) + 1 for i in sents]
+    for i in sents:
+        res.append(segment[index:index + i])
+        index += i
+    return res
     
 @app.route('/translate/segment',methods=['GET', 'POST'])
 def api_multisentence_translate():
@@ -260,7 +272,7 @@ def api_multisentence_translate():
             segment = request.form['segment']
         segment = filter(lambda x:x != "\n" and x != "\t",segment)
         
-        sents = [one for one in split_outnumb(segment) if one.strip()]
+        sents = split_sents(segment)
         len_sent = len(sents)
         if len_sent > 4:
             return jsonify(errcode='error',error="目前仅接受4句以下翻译。")
@@ -282,7 +294,7 @@ def api_multisentence_translate():
         for one in [''.join([ind2ch.get(i,'') for i in j]) for j in tran[0]][:len_sent]:
             trans.append(one)
         return jsonify(errcode='success',
-                translate=u'。'.join(trans))
+                translate=u' '.join(trans))
     except Exception,e: 
         import traceback 
         traceback.print_exc()  
