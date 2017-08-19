@@ -274,9 +274,10 @@ def api_multisentence_translate():
         
         sents = split_sents(segment)
         len_sent = len(sents)
-        if len_sent > 4:
-            return jsonify(errcode='error',error="目前仅接受4句以下翻译。")
-        assert(len_sent <= 4 and len_sent != 0)
+        assert(len_sent != 0)
+	if len_sent > 4:
+		sents = sents[:4]
+		len_sent = 4
         
         # process the translation
         sents = [[i.lower() for i in jieba.cut(sent) if i.strip()] for sent in sents]
